@@ -7,7 +7,7 @@
   '(java.awt.image BufferedImage BufferedImageOp MemoryImageSource)
   '(javax.imageio ImageIO)
   '(java.io File)
-  '(javax.swing JFrame JPanel Timer KeyStroke ImageIcon)
+  '(javax.swing JFrame JPanel Timer KeyStroke ImageIcon BorderFactory)
   '(jpen.event PenListener)
   '(jpen.demo StatusReport)
   '(jpen PButtonEvent PenManager PKindEvent PLevelEvent PScrollEvent PLevel PLevel$Type))
@@ -596,7 +596,21 @@
                  (penKindEvent [ev])
                  (penScrollEvent [ev])
                  (penTock [millis]))))
-      (. frame (setSize 305 228))
+      ;(. panel setBorder (. BorderFactory createEmptyBorder 0 0 0 0))
+      (. frame add panel)
+      (. panel setPreferredSize (new Dimension 300 200))
+      (. frame pack)
+      ;(prn (. panel getSize))
+      ;(prn (. panel getBounds))
+      ;(prn (. frame getSize))
+      ;; The following should not be necessary. For some reason there is a
+      ;; padding of 5 pixels all around added to the size of the panel. See
+      ;; http://stackoverflow.com/questions/1593683/unwanted-border-around-jpanel
+      (let [p (. panel getSize)
+	    f (. frame getSize)
+	    delta-w (- (. f getWidth) (. p getWidth))
+	    delta-h (- (. f getHeight) (. p getHeight))]
+	(. frame setSize (- (+ 300 delta-w) 10) (- (+ 200 delta-h) 10)))
       (. frame (setTitle "InkBoard v0.5"))
       (. frame (setAlwaysOnTop true))
       (. frame (setResizable false))
@@ -607,7 +621,6 @@
 	    cursor (. (Toolkit/getDefaultToolkit) createCustomCursor image (new Point 0 0) "invisibleCursor")]
 	(. frame setCursor cursor))
       (. frame setIconImage (. (new ImageIcon "images/icon-16x16.png") getImage))
-      (. frame (add panel))
       (. frame
         (addWindowListener
           (proxy [WindowAdapter] []
