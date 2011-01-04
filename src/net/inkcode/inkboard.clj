@@ -407,14 +407,54 @@
       (ImageIO/read (new File "images/radial-menu-ring-6.png"))
       (ImageIO/read (new File "images/radial-menu-ring-7.png"))
       ])
+
 ;; draw radial menu from one of the above image files such that
 ;; (x,y) is the menu center and r its radius
+;; performs scaling on the fly!
 (defn draw-menu-image [^Graphics2D g img x y r]
   (let [s (* r (/ 128 80))]
     (prof/prof :image
 	       (. g drawImage img (- x s) (- y s) (+ x s) (+ y s) 0 0 256 256 nil)))
   )
 
+(defn radius-to-s [r] (* r (/ 128 80)))
+  
+(defn scale-menu-image [img r]
+  (let [s (radius-to-s r)
+	w (* 2 s)
+	tmp (new BufferedImage w w (. BufferedImage TYPE_INT_ARGB))
+	^Graphics2D g (. tmp createGraphics)]
+    (. g setRenderingHint (. RenderingHints KEY_INTERPOLATION) (. RenderingHints VALUE_INTERPOLATION_BICUBIC))
+    (. g setRenderingHint (. RenderingHints KEY_ANTIALIASING) (. RenderingHints VALUE_ANTIALIAS_ON))
+    (. g drawImage img 0 0 w w nil)
+    (. g dispose)
+    tmp))
+
+(def image-menu-active-small (scale-menu-image image-menu-active (:menu-scale @the-state)))
+(def image-menu-active-large (scale-menu-image image-menu-active (:preview-scale @the-state)))
+(def image-menu-highlight-small (map (fn [img] (scale-menu-image img (:menu-scale @the-state))) image-menu-highlight))
+(def image-menu-highlight-large (map (fn [img] (scale-menu-image img (:preview-scale @the-state))) image-menu-highlight))
+
+(defn draw-menu-images [^Graphics2D g]
+  (let [item (:active-item @the-state)
+	^BufferedImage large-image (if (not (nil? item))
+		      (nth image-menu-highlight-large item)
+		      image-menu-active-large)
+	^BufferedImage small-image (if (not (nil? item))
+		      (nth image-menu-highlight-small item)
+		      image-menu-active-small)
+	mx (:menu-x @the-state)
+	my (:menu-y @the-state)
+	mr (:menu-scale @the-state)
+	ms (radius-to-s mr)
+	px (:preview-x @the-state)
+	py (:preview-y @the-state)
+	pr (:preview-scale @the-state)
+	ps (radius-to-s pr)]
+    (. g drawImage small-image (int (- mx ms)) (int (- my ms)) nil)
+    (. g drawImage large-image (int (- px ps)) (int (- py ps)) nil)))
+    
+    
 (defn draw-circle [^Graphics2D g p r f]
   (let [^Ellipse2D$Double circ (new Ellipse2D$Double (- (p 0) r) (- (p 1) r)  (* 2 r) (* 2 r))]
     (if f
@@ -480,23 +520,15 @@
                            (not (:menu-active @the-state)) (. g (setColor (. Color gray)))
                            (= i (:active-item @the-state)) (. g (setColor (. Color red)))
                            :else (. g (setColor (. Color blue))))
-                         (draw-circle g (menu-circle-center i) menu-circle-radius true)))
-	draw-text (fn [x y scale])
-	which-image (cond
-		     (not (:menu-active @the-state)) image-menu-active ;; use text to show activity
-		     (not (nil? (:active-item @the-state))) (nth image-menu-highlight (:active-item @the-state))
-		     :else image-menu-active)]
-    ;(. g setRenderingHint (. RenderingHints KEY_INTERPOLATION) (. RenderingHints VALUE_INTERPOLATION_BICUBIC))
-    ;(. g setRenderingHint (. RenderingHints KEY_ANTIALIASING) (. RenderingHints VALUE_ANTIALIAS_ON))
-    (. g drawImage image-background nil (int 0) (int 0))
-    (draw-menu-image g which-image (:menu-x @the-state) (:menu-y @the-state) (:menu-scale @the-state))
-    (draw-menu-image g which-image (:preview-x @the-state) (:preview-y @the-state) (:preview-scale @the-state))
+                         (draw-circle g (menu-circle-center i) menu-circle-radius true)))]
+    (. g drawImage image-background (int 0) (int 0) nil)
+    (draw-menu-images g)
     (draw-circle g [@old-x @old-y] 1.5 true)
     (if (:menu-active @the-state)
       (do
 	(. g (setTransform default-transform))
 	(. g (setColor (. Color black )))
-	(. g (setFont (new Font "Calibri" (. Font BOLD) 10))) 
+	(. g (setFont (new Font "Calibri" (. Font BOLD) 10)))
 	(. g translate (double (:preview-x @the-state)) (double (:preview-y @the-state)))
 	(. g scale (double (:preview-scale @the-state)) (double (:preview-scale @the-state)))
 	(draw-menu-text g (:current-menu @the-state))

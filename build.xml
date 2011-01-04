@@ -61,7 +61,7 @@
   </target>
 
   <target name="run" depends="build" description="Run the application">
-    <java fork="true" jar="test.jar"/>
+    <java fork="true" dir="build" jar="build/inkboard.jar"/>
   </target>
 	
 </project>
