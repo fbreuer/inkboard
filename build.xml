@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="test" basedir="." default="build">
+
+  <target name="mkdirs">
+    <mkdir dir="classes"/>
+    <mkdir dir="build"/>
+  </target>
+  
+  <target name="build" depends="clean, mkdirs, compile, jar" />
+  
+  <target name="clean">
+    <delete dir="classes" />
+  </target>
+	
+  <target name="distclean" depends="clean" description="clean distribution">
+    <delete dir="build"/>
+    <delete file="inkboard.jar"/>
+  </target>
+
+  <target name="compile" description="Run the Clojure Compiler" depends="mkdirs">
+    <java classname="clojure.lang.Compile" fork="true">
+      <sysproperty key="clojure.compile.path" value="classes" />
+      <classpath>
+	<fileset dir="lib">
+	  <include name="**/*.jar"/>
+	</fileset>
+	<dirset dir="classes"/>
+	<dirset dir="src"/>
+      </classpath>
+      <arg value="net.inkcode.inkboard" />
+    </java>
+  </target>
+
+  <target name="jar" depends="compile">
+    <jar destfile="build/inkboard.jar"
+         basedir="."
+         includes="classes/**/*.class">
+      <manifest>
+        <attribute name="Main-Class" value="net.inkcode.inkboard" />
+        <attribute name="Class-Path" value="." />
+      </manifest>
+      <fileset dir="classes" includes="**/*.class"/>
+      <zipfileset src="lib/clojure-1.2/clojure.jar"/>
+      <zipfileset src="lib/clojure-1.2/clojure-contrib.jar"/>
+      <zipfileset src="lib/jpen-2/jpen-2.jar"/>
+    </jar>
+  </target>
+
+  <target name="dist" depends="distclean, build">
+    <copy todir="build">
+      <fileset dir="lib/jpen-2">
+	<include name="*.so"/>
+	<include name="*.dll"/>
+	<include name="*.jnilib"/>
+      </fileset>
+    </copy>
+    <mkdir dir="build/images"/>
+    <copy todir="build/images">
+      <fileset dir="images"/>
+    </copy>
+  </target>
+
+  <target name="run" depends="build" description="Run the application">
+    <java fork="true" jar="test.jar"/>
+  </target>
+	
+</project>
