@@ -1,0 +1,5 @@
+﻿h1. InkBoard
+
+InkBoard is an experimental pen-centric on-screen keyboard. For more information visit http://www.inkcode.net or read the developer's blog at http://blog.felixbreuer.net.
+
+InkBoard is Copyright (C) 2010-2011 by Felix Breuer and licensed under the GPL v3.0.
