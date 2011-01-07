@@ -542,6 +542,7 @@
     (draw-circle g [@old-x @old-y] 1.5 true)
     (if (:menu-active @the-state)
       (do
+	(. g setRenderingHint (. RenderingHints KEY_ANTIALIASING) (. RenderingHints VALUE_ANTIALIAS_ON))
 	(. g (setTransform default-transform))
 	(. g (setColor (. Color black )))
 	(. g (setFont (new Font "Calibri" (. Font BOLD) 10)))
