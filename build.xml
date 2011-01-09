@@ -60,7 +60,7 @@
     </copy>
   </target>
 
-  <target name="run" depends="build" description="Run the application">
+  <target name="run" depends="dist" description="Run the application">
     <java fork="true" dir="build" jar="build/inkboard.jar"/>
   </target>
 	
